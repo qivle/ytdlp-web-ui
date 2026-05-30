@@ -87,14 +87,14 @@ def parse_video(url: str, cookie_browser: str = "auto"):
         formats = info.get('formats', [])
         filtered_formats = []
         
-        # Helper to deduplicate formats somewhat
-        added_res = set()
+        # Helper to deduplicate formats by resolution and extension
+        added_keys = set()
 
         # Get best audio size for estimating total size of video-only formats
         best_audio = next((f for f in reversed(formats) if f.get('vcodec') == 'none' and f.get('acodec') != 'none'), None)
         audio_size = best_audio.get('filesize') or best_audio.get('filesize_approx') or 0 if best_audio else 0
 
-        for f in formats:
+        for f in reversed(formats):
             resolution = f.get('resolution') or f"{f.get('width', '')}x{f.get('height', '')}"
             if resolution == 'x':
                 resolution = 'Audio Only' if f.get('vcodec') == 'none' else 'Unknown'
@@ -116,7 +116,8 @@ def parse_video(url: str, cookie_browser: str = "auto"):
             # Simple heuristic to get good formats
             if f.get('vcodec') != 'none' and f.get('acodec') != 'none':
                 # Has both video and audio
-                if resolution not in added_res:
+                key = (resolution, ext)
+                if key not in added_keys:
                     filtered_formats.append({
                         'format_id': format_id,
                         'resolution': resolution,
@@ -126,10 +127,11 @@ def parse_video(url: str, cookie_browser: str = "auto"):
                         'vcodec': vcodec,
                         'size_str': size_str
                     })
-                    added_res.add(resolution)
+                    added_keys.add(key)
             elif f.get('vcodec') != 'none' and f.get('acodec') == 'none':
                 # Video only (DASH) - needs merging
-                if resolution not in added_res:
+                key = (resolution, ext)
+                if key not in added_keys:
                     filtered_formats.append({
                         'format_id': format_id, # Frontend will append +bestaudio
                         'resolution': resolution,
@@ -139,10 +141,11 @@ def parse_video(url: str, cookie_browser: str = "auto"):
                         'vcodec': vcodec,
                         'size_str': size_str
                     })
-                    added_res.add(resolution)
+                    added_keys.add(key)
             elif f.get('vcodec') == 'none' and f.get('acodec') != 'none':
                 # Audio Only
-                if 'Audio Only' not in added_res:
+                key = ('Audio Only', ext)
+                if key not in added_keys:
                     filtered_formats.append({
                         'format_id': format_id,
                         'resolution': 'Audio Only',
@@ -152,7 +155,7 @@ def parse_video(url: str, cookie_browser: str = "auto"):
                         'vcodec': '',
                         'size_str': f"{round(audio_size / (1024*1024), 1)} MB" if audio_size > 0 else ""
                     })
-                    added_res.add('Audio Only')
+                    added_keys.add(key)
 
         return {
             "success": True,
@@ -161,7 +164,7 @@ def parse_video(url: str, cookie_browser: str = "auto"):
             "thumbnail": info.get('thumbnail'),
             "channel": info.get('uploader'),
             "duration": info.get('duration_string') or info.get('duration'),
-            "formats": filtered_formats[::-1], # best to worst roughly
+            "formats": filtered_formats, # already best to worst
             "logs": logger.logs
         }
     except Exception as e:
