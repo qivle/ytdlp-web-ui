@@ -71,20 +71,20 @@ async def start_download(req: DownloadRequest):
     task_id = str(uuid.uuid4())
     queue = asyncio.Queue()
     download_tasks[task_id] = queue
-    
-    database.add_history(
-        req.video_id, req.title, req.thumbnail, req.channel, 
-        req.duration, req.format_id, req.ext
-    )
 
-    asyncio.create_task(run_download_task(task_id, req.url, req.format_id, req.cookie_browser))
+    asyncio.create_task(run_download_task(task_id, req.url, req.format_id, req.cookie_browser, req))
     
     return {"task_id": task_id}
 
-async def run_download_task(task_id: str, url: str, format_id: str, cookie_browser: str):
+async def run_download_task(task_id: str, url: str, format_id: str, cookie_browser: str, req: DownloadRequest):
     queue = download_tasks[task_id]
-    await downloader.download_video(url, format_id, queue, cookie_browser)
-    await queue.put({"status": "completed"})
+    success = await downloader.download_video(url, format_id, queue, cookie_browser)
+    if success:
+        database.add_history(
+            req.video_id, req.title, req.thumbnail, req.channel, 
+            req.duration, req.format_id, req.ext
+        )
+        await queue.put({"status": "completed"})
 
 @app.websocket("/ws/progress/{task_id}")
 async def websocket_endpoint(websocket: WebSocket, task_id: str):

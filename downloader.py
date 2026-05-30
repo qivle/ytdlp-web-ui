@@ -64,7 +64,8 @@ def parse_video(url: str, cookie_browser: str = "auto"):
                 'download': False,
                 'quiet': False,
                 'no_warnings': False,
-                'logger': logger
+                'logger': logger,
+                'remote_components': ['ejs:github']
             }
             if browser:
                 ydl_opts['cookiesfrombrowser'] = (browser, )
@@ -209,7 +210,8 @@ async def download_video(url: str, format_id: str, ws_queue: asyncio.Queue, cook
         'progress_hooks': [progress_hook],
         'quiet': False,
         'no_warnings': False,
-        'logger': logger
+        'logger': logger,
+        'remote_components': ['ejs:github']
     }
     
     os.makedirs('downloads', exist_ok=True)
@@ -249,7 +251,7 @@ async def download_video(url: str, format_id: str, ws_queue: asyncio.Queue, cook
         return False
 
     loop = asyncio.get_running_loop()
-    await loop.run_in_executor(None, run_ydl)
+    return await loop.run_in_executor(None, run_ydl)
 
 def update_ytdlp():
     try:
