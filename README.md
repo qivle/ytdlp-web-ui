@@ -32,7 +32,7 @@
    - 检查您电脑上是否安装了 Python 3.9+。
    - 检查并自动为您创建 Python 虚拟环境 (`venv`)。
    - 自动激活虚拟环境并安装所有依赖包（见 `requirements.txt`）。
-   - 自动在浏览器中打开 `http://localhost:8000` 页面。
+   - 自动在浏览器中打开 `http://localhost:8088` 页面。
    - 启动 FastAPI 后端服务。
 
 ---
@@ -66,9 +66,9 @@ pip install -r requirements.txt
 
 ### 4. 运行服务
 ```bash
-uvicorn main:app --host 0.0.0.0 --port 8000
+uvicorn main:app --host 0.0.0.0 --port 8088
 ```
-启动后，在浏览器访问 `http://localhost:8000` 即可使用。
+启动后，在浏览器访问 `http://localhost:8088` 即可使用。
 
 ---
 

@@ -45,11 +45,11 @@ if not exist "venv" (
 :: Wait 1 second and open browser to the local page
 echo [INFO] Opening Web UI in browser...
 timeout /t 1 /nobreak >nul
-start http://localhost:8000
+start http://localhost:8088
 
 :: Run the FastAPI application using uvicorn
-echo [INFO] Starting FastAPI server on port 8000...
-uvicorn main:app --host 0.0.0.0 --port 8000
+echo [INFO] Starting FastAPI server on port 8088...
+uvicorn main:app --host 0.0.0.0 --port 8088
 
 :: If the server exits, keep the command window open for debugging
 if %errorlevel% neq 0 (
