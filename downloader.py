@@ -168,7 +168,7 @@ def parse_video(url: str, cookie_browser: str = "auto"):
         import traceback
         return {"success": False, "error": f"{str(e)}\n{traceback.format_exc()}", "logs": logger.logs if 'logger' in locals() else []}
 
-async def download_video(url: str, format_id: str, ws_queue: asyncio.Queue, cookie_browser: str = "auto"):
+async def download_video(url: str, format_id: str, ws_queue: asyncio.Queue, cookie_browser: str = "auto", ext: str = "mp4"):
     loop = asyncio.get_running_loop()
 
     def progress_hook(d):
@@ -197,11 +197,16 @@ async def download_video(url: str, format_id: str, ws_queue: asyncio.Queue, cook
                 pass
 
     # For pure audio format, don't try to merge with bestaudio
-    if format_id == 'bestaudio' or 'Audio' in format_id: # Just a heuristic, frontend can send 'bestaudio' for pure audio
+    if format_id == 'bestaudio' or 'Audio' in format_id:
         final_format = format_id
     else:
-        # For video, ensure we grab audio if it's dash
-        final_format = f'{format_id}+bestaudio/best' if format_id else 'best'
+        # Select best audio that matches target extension (AAC/m4a for mp4) and prefers original language
+        if ext == 'mp4':
+            audio_sel = 'bestaudio[format_note*=original][ext=m4a]/bestaudio[format_note*=original]/bestaudio[ext=m4a]/bestaudio'
+        else:
+            audio_sel = 'bestaudio[format_note*=original]/bestaudio'
+            
+        final_format = f'{format_id}+{audio_sel}/best' if format_id else 'best'
 
     logger = DownloadLogger(ws_queue, loop)
     ydl_opts = {

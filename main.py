@@ -78,7 +78,7 @@ async def start_download(req: DownloadRequest):
 
 async def run_download_task(task_id: str, url: str, format_id: str, cookie_browser: str, req: DownloadRequest):
     queue = download_tasks[task_id]
-    success = await downloader.download_video(url, format_id, queue, cookie_browser)
+    success = await downloader.download_video(url, format_id, queue, cookie_browser, req.ext)
     if success:
         database.add_history(
             req.video_id, req.title, req.thumbnail, req.channel, 
